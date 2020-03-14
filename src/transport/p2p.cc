@@ -64,8 +64,8 @@ ncclResult_t p2pCanConnect(int* ret, struct ncclTopoSystem* topo, struct ncclTop
 
   if (p2pLevel == 0) return ncclSuccess;
 
-  // Rule out different nodes
-  if (info1->hostHash != info2->hostHash) return ncclSuccess;
+  // DONT rule out different nodes to enable p2p between pods
+  // if (info1->hostHash != info2->hostHash) return ncclSuccess;
 
   // Convert the peer's busId into a local cudaDev index (cf. CUDA_VISIBLE_DEVICES)
   int cudaDev1 = busIdToCudaDev(info1->busId);
