@@ -518,6 +518,8 @@ static ncclResult_t initTransportsRank(struct ncclComm* comm, ncclUniqueId* comm
   allGather3Data[rank].cudaCompCap = ncclCudaCompCap();
   allGather3Data[rank].nvlink = treeGraph.nvlink;
   allGather3Data[rank].nChannels = comm->nChannels = std::min(treeGraph.nChannels, ringGraph.nChannels);
+  TRACE(NCCL_INIT|NCCL_P2P, "tree->channels before AllGather3: %d", treeGraph.nChannels);
+  TRACE(NCCL_INIT|NCCL_P2P, "ring->channels before AllGather3: %d", ringGraph.nChannels);
   TRACE(NCCL_INIT|NCCL_P2P, "comm->channels before AllGather3: %d", comm->nChannels);
   allGather3Data[rank].tree.sameChannels = treeGraph.sameChannels;
   allGather3Data[rank].tree.speedIntra = treeGraph.speedIntra;
