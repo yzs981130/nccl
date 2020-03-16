@@ -490,6 +490,7 @@ static ncclResult_t initTransportsRank(struct ncclComm* comm, ncclUniqueId* comm
   ringGraph.crossNic = ncclParamCrossNic();
   NCCLCHECK(ncclTopoCompute(comm->topo, &ringGraph));
   NCCLCHECK(ncclTopoPrintGraph(comm->topo, &ringGraph));
+  TRACE(NCCL_INIT|NCCL_P2P, "comm->channels after AllGather2: %d", comm->nChannels);
 
   // AllGather3 - begin
 
@@ -517,6 +518,7 @@ static ncclResult_t initTransportsRank(struct ncclComm* comm, ncclUniqueId* comm
   allGather3Data[rank].cudaCompCap = ncclCudaCompCap();
   allGather3Data[rank].nvlink = treeGraph.nvlink;
   allGather3Data[rank].nChannels = comm->nChannels = std::min(treeGraph.nChannels, ringGraph.nChannels);
+  TRACE(NCCL_INIT|NCCL_P2P, "comm->channels before AllGather3: %d", comm->nChannels);
   allGather3Data[rank].tree.sameChannels = treeGraph.sameChannels;
   allGather3Data[rank].tree.speedIntra = treeGraph.speedIntra;
   allGather3Data[rank].tree.speedInter = treeGraph.speedInter;
@@ -556,6 +558,7 @@ static ncclResult_t initTransportsRank(struct ncclComm* comm, ncclUniqueId* comm
 
   comm->nvlink = 1;
   for (int i = 0; i < nranks; i++) comm->nvlink &= allGather3Data[i].nvlink;
+  TRACE(NCCL_INIT|NCCL_P2P, "comm->nvlink: %d", comm->nvlink);
 
   int nChannelsOrig = comm->nChannels;
   struct ncclTopoRanks** allTopoRanks;
@@ -580,10 +583,14 @@ static ncclResult_t initTransportsRank(struct ncclComm* comm, ncclUniqueId* comm
     for (int i=0; i<comm->nChannels; i++) memcpy(comm->channels+comm->nChannels+i, comm->channels+nChannelsOrig+i, sizeof(struct ncclChannel));
   }
 
+  TRACE(NCCL_INIT|NCCL_P2P, "comm->channels before ring: %d", comm->nChannels);
+
   int *rings;
   NCCLCHECK(ncclCalloc(&rings, nranks*MAXCHANNELS));
 
   NCCLCHECK(ncclTopoPostset(comm, nodesFirstRank, allTopoRanks, rings));
+
+  TRACE(NCCL_INIT|NCCL_P2P, "comm->channels after ring: %d", comm->nChannels);
 
   free(allTopoRanks);
   free(nodesFirstRank);
