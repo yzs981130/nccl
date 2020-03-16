@@ -50,6 +50,7 @@ static int busIdToCudaDev(int64_t busId) {
 
 /* Determine if two peers can communicate through p2p */
 ncclResult_t p2pCanConnect(int* ret, struct ncclTopoSystem* topo, struct ncclTopoGraph* graph, struct ncclPeerInfo* info1, struct ncclPeerInfo* info2) {
+  TRACE(NCCL_INIT|NCCL_P2P, "Entering p2pCanConnect with info1: rank %d, gpu %d, busid %lx; info2: rank %d, gpu %d, busid %lx", info1->rank, info1->cudaDev, info1->busId, info2->rank, info2->cudaDev, info2->busId);
   int cpuCount;
   NCCLCHECK(ncclTopoCpuCount(topo, &cpuCount));
   // Do not use P2P across sockets by default (provided CUDA permits it).
