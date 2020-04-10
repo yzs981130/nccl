@@ -77,20 +77,18 @@ uint64_t getHash(const char* string, int n) {
 
 /* Generate a hash of the unique identifying string for this host
  * that will be unique for both bare-metal and container instances
- * Equivalent of a hash of;
  *
- * $(hostname)$(cat /proc/sys/kernel/random/boot_id)
+ * Reads a host ID string from /proc/sys/kernel/random/boot_id
  *
  * This string can be overridden by using the NCCL_HOSTID env var.
+ * Code falls back to the full hostname if there is an error
  */
 #define HOSTID_FILE "/proc/sys/kernel/random/boot_id"
 uint64_t getHostHash(void) {
   char hostHash[1024];
   char *hostId;
 
-  // Fall back is the full hostname if something fails
-  (void) getHostName(hostHash, sizeof(hostHash), '\0');
-  int offset = strlen(hostHash);
+  hostHash[0] = '\0';
 
   if ((hostId = getenv("NCCL_HOSTID")) != NULL) {
     strncpy(hostHash, hostId, sizeof(hostHash));
@@ -99,7 +97,7 @@ uint64_t getHostHash(void) {
     if (file != NULL) {
       char *p;
       if (fscanf(file, "%ms", &p) == 1) {
-        strncpy(hostHash+offset, p, sizeof(hostHash)-offset-1);
+        strncpy(hostHash, p, sizeof(hostHash)-1);
         free(p);
       }
     }
@@ -108,6 +106,11 @@ uint64_t getHostHash(void) {
 
   // Make sure the string is terminated
   hostHash[sizeof(hostHash)-1]='\0';
+
+  // Fall back is the full hostname if something failed
+  if (strlen(hostHash) == 0) {
+    (void) getHostName(hostHash, sizeof(hostHash), '\0');
+  }
 
   TRACE(NCCL_INIT,"unique hostname '%s'", hostHash);
 
